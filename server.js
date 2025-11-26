@@ -59,13 +59,13 @@ const look = async ({ name, year, institution }) => {
 
   // extract table rows
   const tableData = await page.$$eval('table > tbody tr', (rows) => {
-      return rows.map((row) => {
-          const cols = Array.from(row.querySelectorAll('td'));
-          const raw = cols.map((td) => td.innerText.trim());
-          const id = row.querySelector('#DownloadPDFII').getAttribute('data-id');
-          raw[cols.length - 1] = id;
-          return raw.slice(6)
-      });
+    return rows.map((row) => {
+      const cols = Array.from(row.querySelectorAll('td'));
+      const raw = cols.map((td) => td.innerText.trim());
+      const id = row.querySelector('#DownloadPDFII').getAttribute('data-id');
+      raw[cols.length - 1] = id;
+      return raw.slice(6)
+    });
   });
 
   console.log(tableData);
