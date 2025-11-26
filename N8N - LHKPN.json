@@ -1,0 +1,560 @@
+{
+  "name": "LHKPN",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{ $('ENV').item.json.host }}/search?name={{ encodeURIComponent($json.query) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        368,
+        144
+      ],
+      "id": "46556dbf-7c38-4574-90d3-06d03b4d24a7",
+      "name": "Get LHKPN"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "555eecff-a126-4405-8a70-4987d95cb527",
+              "name": "host",
+              "value": "http://192.168.0.92:3333",
+              "type": "string"
+            },
+            {
+              "id": "d1651cb1-51c1-49a1-9d12-9e2666006a6b",
+              "name": "query",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        144
+      ],
+      "id": "ce4508bb-b788-4ee3-bdbe-f20b902c92ec",
+      "name": "ENV"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('ENV').item.json.host }}/chart",
+        "sendBody": true,
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"data\": {{ JSON.stringify($('Get LHKPN').item.json.data.map(item => item.slice(0, -1)).reverse()) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1216,
+        272
+      ],
+      "id": "f546b70d-f260-4a91-9d62-702e73ca499b",
+      "name": "Get Chart",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "function groupByName(data) {\n  const result = {};\n\n  for (const item of data) {\n    const name = item[0];\n\n    if (!result[name]) {\n      result[name] = [];\n    }\n\n    result[name].push(item);\n  }\n\n  return result;\n}\n\nreturn groupByName($input.first().json.data);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        144
+      ],
+      "id": "f867cebb-c584-42e6-8d1a-580a8dd64a38",
+      "name": "groupBy Name"
+    },
+    {
+      "parameters": {
+        "jsCode": "const names = Object.keys($json);\nconst dropdownOptions = names.map(name => ({option: name}))\n\nconst dropdown = {\n  \"fieldLabel\": \"Nama Pejabat\",\n  \"fieldType\": \"dropdown\",\n  \"fieldOptions\": {\n    \"values\": dropdownOptions\n  },\n  \"requiredField\": true\n}\n\nreturn {names, dropdown};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        48
+      ],
+      "id": "45b4f1dc-a87f-4093-b39d-3898be8e5db8",
+      "name": "Name Only"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e81f3332-cd5e-4f49-ae8a-d617666de577",
+              "leftValue": "={{ Object.keys($json).length }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        144
+      ],
+      "id": "3523011e-c0c3-496f-b4b0-8838e1c88ad4",
+      "name": "If result > 1 name"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        160
+      ],
+      "id": "6a33a5f8-3583-4cfa-850b-2d381feaa53c",
+      "name": "Telegram Trigger",
+      "webhookId": "60dd63a6-71b5-4a98-afe4-d4d2d9cd4e2b",
+      "credentials": {
+        "telegramApi": {
+          "id": "5l3azlrdaRqxSbYY",
+          "name": "Telegram account - kekayaan_pejabat_indonesia_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "efe76fb8-2eb8-48c4-b7ff-2a241a12927a",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -32,
+        160
+      ],
+      "id": "f03daafc-51a0-4e7c-b938-fe4bf130878e",
+      "name": "If not /start"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "message": "=Ada {{  $json.names.length }} pejabat dengan nama \"{{ $('Telegram Trigger').item.json.message.text }}\". Silahkan pilih salah satu untuk melanjutkan pemeriksaan.",
+        "responseType": "customForm",
+        "defineForm": "json",
+        "jsonOutput": "=[{{ JSON.stringify($json.dropdown) }}]",
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 10,
+              "resumeUnit": "minutes"
+            }
+          },
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        48
+      ],
+      "id": "cfe51622-8e6f-4d21-a354-62bb6a4eb597",
+      "name": "Send Options",
+      "webhookId": "0d73d2de-0f8e-4c1e-870e-8a24270f1804",
+      "credentials": {
+        "telegramApi": {
+          "id": "5l3azlrdaRqxSbYY",
+          "name": "Telegram account - kekayaan_pejabat_indonesia_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8c8ed3d2-f6ef-4fe0-98c3-2bbda95a4083",
+              "name": "query",
+              "value": "={{ $json.data['Nama Pejabat'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1632,
+        48
+      ],
+      "id": "f4a14685-c0ea-4b67-b85d-1a30f2e28c0d",
+      "name": "Set Query"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        256
+      ],
+      "id": "80de0775-9ce8-4739-ac12-dc62c41fe8df",
+      "name": "Send Chart",
+      "webhookId": "7b172b32-1765-4dae-ac14-789d38bcf999",
+      "credentials": {
+        "telegramApi": {
+          "id": "5l3azlrdaRqxSbYY",
+          "name": "Telegram account - kekayaan_pejabat_indonesia_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "Aduh lagi error, antara keyword nya ga bener atau emang error aja",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        464
+      ],
+      "id": "06afcff6-8288-49bc-ae1a-83a037c906dd",
+      "name": "Error Message",
+      "webhookId": "7b172b32-1765-4dae-ac14-789d38bcf999",
+      "credentials": {
+        "telegramApi": {
+          "id": "5l3azlrdaRqxSbYY",
+          "name": "Telegram account - kekayaan_pejabat_indonesia_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://elhkpn.kpk.go.id/portal/user/PreviewAnnoun/{{ $('Get LHKPN').item.json.data[0][7] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cookie",
+              "value": "={{ $json.headers['set-cookie'][0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1152,
+        528
+      ],
+      "id": "f6392640-94a7-4894-9b30-58be0fb401ff",
+      "name": "Get Report PDF",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        672
+      ],
+      "id": "0dac1eec-035e-456b-80b5-92cd1a7643eb",
+      "name": "Send a document",
+      "webhookId": "3ffebcfb-2630-4a1c-82e9-f03dc043ff51",
+      "credentials": {
+        "telegramApi": {
+          "id": "5l3azlrdaRqxSbYY",
+          "name": "Telegram account - kekayaan_pejabat_indonesia_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://elhkpn.kpk.go.id/portal/user/setid",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $('Get LHKPN').item.json.data[0][7] }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        976,
+        416
+      ],
+      "id": "2a32c54a-ee25-4800-8fce-f47c29e1026f",
+      "name": "Set ID"
+    }
+  ],
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 768052457,
+          "message": {
+            "message_id": 13,
+            "from": {
+              "id": 1064045263,
+              "is_bot": false,
+              "first_name": "Thins",
+              "username": "fathinfo",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 1064045263,
+              "first_name": "Thins",
+              "username": "fathinfo",
+              "type": "private"
+            },
+            "date": 1764142989,
+            "text": "Bahlil"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Get LHKPN": {
+      "main": [
+        [
+          {
+            "node": "groupBy Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ENV": {
+      "main": [
+        [
+          {
+            "node": "Get LHKPN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "groupBy Name": {
+      "main": [
+        [
+          {
+            "node": "If result > 1 name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If result > 1 name": {
+      "main": [
+        [
+          {
+            "node": "Name Only",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Chart",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If not /start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If not /start": {
+      "main": [
+        [
+          {
+            "node": "ENV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Name Only": {
+      "main": [
+        [
+          {
+            "node": "Send Options",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Options": {
+      "main": [
+        [
+          {
+            "node": "Set Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Query": {
+      "main": [
+        [
+          {
+            "node": "Get LHKPN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Chart": {
+      "main": [
+        [
+          {
+            "node": "Send Chart",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Report PDF": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set ID": {
+      "main": [
+        [
+          {
+            "node": "Get Report PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "48a2f989-7822-49a6-b2d8-0bb524971895",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1c4856a6ea0e2289038f7e0e856ffce0689ecdd4382b96ba761f84e0e265854f"
+  },
+  "id": "f2s0LPRUQFw6sc7r",
+  "tags": []
+}
