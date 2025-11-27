@@ -13,7 +13,9 @@
         144
       ],
       "id": "46556dbf-7c38-4574-90d3-06d03b4d24a7",
-      "name": "Get LHKPN"
+      "name": "Get LHKPN",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -55,14 +57,14 @@
             {}
           ]
         },
-        "jsonBody": "={\n  \"data\": {{ JSON.stringify($('Get LHKPN').item.json.data.map(item => item.slice(0, -1)).reverse()) }}\n}",
+        "jsonBody": "={\n  \"data\": {{ JSON.stringify($json.data.map(item => item.slice(0, -1)).reverse()) }}\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1216,
-        272
+        1984,
+        256
       ],
       "id": "f546b70d-f260-4a91-9d62-702e73ca499b",
       "name": "Get Chart",
@@ -76,19 +78,19 @@
       "typeVersion": 2,
       "position": [
         544,
-        144
+        128
       ],
       "id": "f867cebb-c584-42e6-8d1a-580a8dd64a38",
       "name": "groupBy Name"
     },
     {
       "parameters": {
-        "jsCode": "const names = Object.keys($json);\nconst dropdownOptions = names.map(name => ({option: name}))\n\nconst dropdown = {\n  \"fieldLabel\": \"Nama Pejabat\",\n  \"fieldType\": \"dropdown\",\n  \"fieldOptions\": {\n    \"values\": dropdownOptions\n  },\n  \"requiredField\": true\n}\n\nreturn {names, dropdown};"
+        "jsCode": "const names = Object.keys($json);\nconst input = $input.first().json;\nconst dropdownOptions = names.map(name => ({option: `${name} - ${input[name][0][7]}`}))\n\nconst dropdown = {\n  \"fieldLabel\": \"Nama Pejabat\",\n  \"fieldType\": \"dropdown\",\n  \"fieldOptions\": {\n    \"values\": dropdownOptions\n  },\n  \"requiredField\": true\n}\n\nreturn {names, dropdown};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1216,
+        1136,
         48
       ],
       "id": "45b4f1dc-a87f-4093-b39d-3898be8e5db8",
@@ -122,7 +124,7 @@
       "typeVersion": 2.2,
       "position": [
         752,
-        144
+        128
       ],
       "id": "3523011e-c0c3-496f-b4b0-8838e1c88ad4",
       "name": "If result > 1 name"
@@ -204,7 +206,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1424,
+        1344,
         48
       ],
       "id": "cfe51622-8e6f-4d21-a354-62bb6a4eb597",
@@ -223,9 +225,27 @@
           "assignments": [
             {
               "id": "8c8ed3d2-f6ef-4fe0-98c3-2bbda95a4083",
-              "name": "query",
-              "value": "={{ $json.data['Nama Pejabat'] }}",
+              "name": "name",
+              "value": "={{ $json.selectedData[0] }}",
               "type": "string"
+            },
+            {
+              "id": "4247beee-a0a5-433b-81b2-f01225cafca7",
+              "name": "docId",
+              "value": "={{ $json.selectedData[7] }}",
+              "type": "string"
+            },
+            {
+              "id": "52454d32-fe47-4b7d-b5e5-f9c6569fd8ec",
+              "name": "institution",
+              "value": "={{ $json.selectedData[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "7fbc06e3-1d75-401d-8e56-cbb0f52b5fbe",
+              "name": "data",
+              "value": "={{ Array($json.selectedData) }}",
+              "type": "array"
             }
           ]
         },
@@ -234,7 +254,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1632,
+        1728,
         48
       ],
       "id": "f4a14685-c0ea-4b67-b85d-1a30f2e28c0d",
@@ -250,8 +270,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1472,
-        256
+        2240,
+        240
       ],
       "id": "80de0775-9ce8-4739-ac12-dc62c41fe8df",
       "name": "Send Chart",
@@ -274,8 +294,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1472,
-        464
+        2240,
+        448
       ],
       "id": "06afcff6-8288-49bc-ae1a-83a037c906dd",
       "name": "Error Message",
@@ -304,8 +324,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1152,
-        528
+        1600,
+        448
       ],
       "id": "f6392640-94a7-4894-9b30-58be0fb401ff",
       "name": "Get Report PDF",
@@ -321,8 +341,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1360,
-        672
+        1952,
+        528
       ],
       "id": "0dac1eec-035e-456b-80b5-92cd1a7643eb",
       "name": "Send a document",
@@ -344,7 +364,7 @@
           "parameters": [
             {
               "name": "id",
-              "value": "={{ $('Get LHKPN').item.json.data[0][7] }}"
+              "value": "={{ $json.docId }}"
             }
           ]
         },
@@ -359,11 +379,89 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        976,
-        416
+        1296,
+        352
       ],
       "id": "2a32c54a-ee25-4800-8fce-f47c29e1026f",
       "name": "Set ID"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "Situs LHKPN lagi down, bukan salah saya",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        368
+      ],
+      "id": "5093df9f-4088-4e01-964d-2b1c66e06210",
+      "name": "Error LHKPN DOWN",
+      "webhookId": "7b172b32-1765-4dae-ac14-789d38bcf999",
+      "credentials": {
+        "telegramApi": {
+          "id": "5l3azlrdaRqxSbYY",
+          "name": "Telegram account - kekayaan_pejabat_indonesia_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const selected = $input.first().json.data['Nama Pejabat'];\nconst [name, id] = selected.split(' - ');\n\nif (!name || !id) {\n  return []\n}\n\nconst dataWithTheSameNames = $('groupBy Name').first().json[name];\nlet selectedData = null\ndataWithTheSameNames.forEach(item => {\n  if (item[7] === id) {\n    selectedData = item\n  }\n});\n\nreturn {\n  selectedData,\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        48
+      ],
+      "id": "2fe81d11-3cad-4804-8e99-4511ddc07560",
+      "name": "Get Selected Person"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8c8ed3d2-f6ef-4fe0-98c3-2bbda95a4083",
+              "name": "name",
+              "value": "={{ Object.keys($json)[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "4247beee-a0a5-433b-81b2-f01225cafca7",
+              "name": "docId",
+              "value": "={{ $json[Object.keys($json)[0]][0][7] }}",
+              "type": "string"
+            },
+            {
+              "id": "52454d32-fe47-4b7d-b5e5-f9c6569fd8ec",
+              "name": "institution",
+              "value": "={{ $json[Object.keys($json)[0]][0][1] }}",
+              "type": "string"
+            },
+            {
+              "id": "18c728aa-8c57-4885-8de6-91b4da5b1cf2",
+              "name": "data",
+              "value": "={{ $json[Object.keys($json)[0]] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        256
+      ],
+      "id": "323cb62d-5de4-4de9-9e9c-15b1be7c0b63",
+      "name": "Set Query1"
     }
   ],
   "pinData": {
@@ -387,7 +485,7 @@
               "type": "private"
             },
             "date": 1764142989,
-            "text": "Bahlil"
+            "text": "joko widodo"
           }
         }
       }
@@ -399,6 +497,13 @@
         [
           {
             "node": "groupBy Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error LHKPN DOWN",
             "type": "main",
             "index": 0
           }
@@ -438,12 +543,7 @@
         ],
         [
           {
-            "node": "Get Chart",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Set ID",
+            "node": "Set Query1",
             "type": "main",
             "index": 0
           }
@@ -487,7 +587,7 @@
       "main": [
         [
           {
-            "node": "Set Query",
+            "node": "Get Selected Person",
             "type": "main",
             "index": 0
           }
@@ -498,7 +598,7 @@
       "main": [
         [
           {
-            "node": "Get LHKPN",
+            "node": "Get Chart",
             "type": "main",
             "index": 0
           }
@@ -544,13 +644,40 @@
           }
         ]
       ]
+    },
+    "Get Selected Person": {
+      "main": [
+        [
+          {
+            "node": "Set Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Query1": {
+      "main": [
+        [
+          {
+            "node": "Get Chart",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "48a2f989-7822-49a6-b2d8-0bb524971895",
+  "versionId": "16a79870-7408-4e3c-93cf-08d441c5c74e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "1c4856a6ea0e2289038f7e0e856ffce0689ecdd4382b96ba761f84e0e265854f"
